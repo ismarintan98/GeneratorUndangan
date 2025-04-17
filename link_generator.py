@@ -1,36 +1,48 @@
 import os
 import time
+import urllib.parse
 
 import pandas as pd
+from fpdf import FPDF
+
+name_list = []
+link_list = []
 
 
-def link_gen(nama_tamu, Nomor):
+def link_gen(nama_tamu, Nomor, no_wa):
 
-    with open("template _text.txt", "r") as file:
+    with open(
+        "template_text.txt", "r", encoding="utf-8"
+    ) as file:  # Make sure to read with UTF-8 encoding
         isi = file.read()
-        # print(isi)
 
         nama_tamu_temp = nama_tamu
         link_main = "https://satumomen.com/khalisa-dan-marin?to="
 
-        # check if nama tamu contains space replace with %20
+        # Check if nama tamu contains space and replace with %20
         if " " in nama_tamu:
             nama_tamu = nama_tamu.replace(" ", "%20")
 
         link_plus_name = link_main + nama_tamu
 
-        # print(link_plus_name)
-        # Ganti placeholder dengan data
+        link_wa = "wa.me/" + str(no_wa)
+
+        # Replace placeholder with actual data from the template
         isi_undangan = isi.format(
             nama_tamu=nama_tamu_temp, link_undangan=link_plus_name
         )
 
-        # Tampilkan atau simpan hasil
-        # print(isi_undangan)
+        # Ensure that emojis are correctly encoded for the WhatsApp link
+        pesaan_wa = urllib.parse.quote(isi_undangan)
+        isi_undangan = f"{link_wa}?text={pesaan_wa}"
+        print(isi_undangan)
 
-        # save path to Hasil/Nomor_Nama.txt
+        name_list.append(nama_tamu_temp)
+        link_list.append(isi_undangan)
+
+        # Save path to Hasil/Nomor_Nama.txt
         save_path = f"Hasil/{Nomor}_{nama_tamu_temp}.txt"
-        with open(save_path, "w") as file:
+        with open(save_path, "w", encoding="utf-8") as file:
             file.write(isi_undangan)
             print(f"File {save_path} berhasil dibuat.")
 
@@ -56,11 +68,16 @@ except FileNotFoundError:
 try:
     nama = df["Nama"].tolist()
     nomor = df["No"].tolist()
+    telepon = df["Nomor Telepon"].tolist()
 except KeyError:
-    print("-> Kolom 'Nama' atau 'No' tidak ditemukan di database.")
+    print("-> Kolom 'Nama' atau 'No' atau Nomor Telepon tidak ditemukan di database.")
     exit()
-print("-> Kolom 'Nama' dan 'No' ditemukan di database.")
+print("-> Kolom 'Nama' dan 'No' dan Nomor Telepon ditemukan di database.")
 print("-> Jumlah data yang ditemukan : ", len(nama))
+
+# print(telepon)
+# exit()
+
 
 print("Apakah Anda ingin melanjutkan? (y/n)")
 jawaban = input("-> ")
@@ -80,7 +97,7 @@ else:
 print("-> Proses pembuatan link undangan dimulai...")
 
 # cek apakah file template_text.txt ada
-if not os.path.exists("template _text.txt"):
+if not os.path.exists("template_text.txt"):
     print("-> File template_text.txt tidak ditemukan.")
     exit()
 else:
@@ -94,7 +111,30 @@ print()
 print()
 
 for i in range(len(nama)):
-    link_gen(nama[i], nomor[i])
+    link_gen(nama[i], nomor[i], telepon[i])
+
+# generate name and hyperlink in each name in pdf
+pdf = FPDF()
+pdf.add_page()
+pdf.set_font("Arial", size=12)
+pdf.cell(200, 10, txt="Link Undangan Pernikahan Khalisa dan Marin", ln=1, align="C")
+pdf.cell(200, 10, txt="Daftar Nama dan Link Undangan", ln=1, align="C")
+
+
+for i in range(len(name_list)):
+    pdf.cell(
+        200,
+        10,
+        txt=f"{nomor[i]}. {name_list[i]}",
+        ln=True,
+        link=link_list[i],
+    )
+
+pdf.output("Hasil/Daftar_Nama_dan_Link_Undangan.pdf")
+print("-> File Daftar_Nama_dan_Link_Undangan.pdf berhasil dibuat.")
+
+exit()
+
 
 print()
 print()
