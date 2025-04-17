@@ -129,9 +129,6 @@ for i in range(len(name_list)):
 pdf.output("Hasil/Daftar_Nama_dan_Link_Undangan.pdf")
 print("-> File Daftar_Nama_dan_Link_Undangan.pdf berhasil dibuat.")
 
-exit()
-
-
 print()
 print()
 
