@@ -10,10 +10,9 @@ link_list = []
 
 
 def link_gen(nama_tamu, Nomor, no_wa):
-
     with open(
         "template_text.txt", "r", encoding="utf-8"
-    ) as file:  # Make sure to read with UTF-8 encoding
+    ) as file:  # Ensure we read with UTF-8 encoding
         isi = file.read()
 
         nama_tamu_temp = nama_tamu
@@ -25,26 +24,23 @@ def link_gen(nama_tamu, Nomor, no_wa):
 
         link_plus_name = link_main + nama_tamu
 
-        link_wa = "wa.me/" + str(no_wa)
+        link_wa = "https://wa.me/" + str(no_wa)
 
-        # Replace placeholder with actual data from the template
+        # Replace placeholders with actual data from the template
         isi_undangan = isi.format(
             nama_tamu=nama_tamu_temp, link_undangan=link_plus_name
         )
 
-        # Ensure that emojis are correctly encoded for the WhatsApp link
-        pesaan_wa = urllib.parse.quote(isi_undangan)
+        # URL encode the rest of the message (but NOT the emojis)
+        pesaan_wa = urllib.parse.quote(
+            isi_undangan, safe=":/?&="
+        )  # Keep the special URL characters safe
         isi_undangan = f"{link_wa}?text={pesaan_wa}"
-        print(isi_undangan)
+
+        print(isi_undangan)  # This should now show the proper emojis
 
         name_list.append(nama_tamu_temp)
         link_list.append(isi_undangan)
-
-        # Save path to Hasil/Nomor_Nama.txt
-        save_path = f"Hasil/{Nomor}_{nama_tamu_temp}.txt"
-        with open(save_path, "w", encoding="utf-8") as file:
-            file.write(isi_undangan)
-            print(f"File {save_path} berhasil dibuat.")
 
 
 print("~~~ Halo Ola, The Moon is beautiful, isn't it? ~~~")
@@ -57,7 +53,8 @@ time.sleep(1)
 print("Loading Database...")
 # delay 1 detik
 time.sleep(1)
-# # load data from excel
+
+# Load data from excel
 try:
     df = pd.read_excel("Database/db.xlsx")
     print("-> Database berhasil dimuat.")
@@ -86,7 +83,7 @@ if jawaban.lower() != "y":
     exit()
 print("-> Proses dilanjutkan.")
 
-# cek apakah folder Hasil ada
+# Check if folder Hasil exists
 if not os.path.exists("Hasil"):
     os.makedirs("Hasil")
     print("-> Folder Hasil berhasil dibuat.")
@@ -96,7 +93,7 @@ else:
     time.sleep(1)
 print("-> Proses pembuatan link undangan dimulai...")
 
-# cek apakah file template_text.txt ada
+# Check if template_text.txt exists
 if not os.path.exists("template_text.txt"):
     print("-> File template_text.txt tidak ditemukan.")
     exit()
@@ -113,13 +110,12 @@ print()
 for i in range(len(nama)):
     link_gen(nama[i], nomor[i], telepon[i])
 
-# generate name and hyperlink in each name in pdf
+# Generate name and hyperlink in each name in the PDF
 pdf = FPDF()
 pdf.add_page()
 pdf.set_font("Arial", size=12)
 pdf.cell(200, 10, txt="Link Undangan Pernikahan Khalisa dan Marin", ln=1, align="C")
 pdf.cell(200, 10, txt="Daftar Nama dan Link Undangan", ln=1, align="C")
-
 
 for i in range(len(name_list)):
     pdf.cell(
